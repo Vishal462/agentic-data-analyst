@@ -1,5 +1,11 @@
 # Agentic AI Data Analyst
 
+**[Live app →](https://agentic-data-analystv1.streamlit.app/)** *(hosted on Streamlit Community Cloud)*
+
+> The hosted instance is there to walk through the interface — tabs, dataset upload and document sessions
+> all render. It cannot answer questions: the model runs through Ollama, which Community Cloud has no way
+> to reach, so a question returns a connection error. [Run it locally](#setup) for working analysis.
+
 A natural-language analytics application. You ask a question in plain English; a
 [LangGraph](https://langchain-ai.github.io/langgraph/) agent decides which tools to call, runs real SQL
 against DuckDB, computes statistics with SciPy, draws charts with Matplotlib, and retrieves context from
