@@ -15,10 +15,25 @@ DB_PATH = Path(os.getenv("DATA_ANALYST_DB_PATH") or DEFAULT_DB_PATH)
 UPLOAD_DB_PATH = Path(os.getenv("DATA_ANALYST_UPLOAD_DB_PATH") or PROJECT_ROOT / "data" / "uploads.duckdb")
 SUPPORTED_DATASET_SUFFIXES = {".csv", ".tsv", ".xlsx", ".xls", ".parquet"}
 
+def _ensure_database(path: Path) -> Path:
+    """Create an empty database file if it is missing.
+
+    DuckDB refuses to open a non-existent file in read-only mode, so on a fresh
+    clone or a hosted deploy - where the demo database is not committed - building
+    the engine would raise at import and the app would never start. An empty
+    database simply reports no tables, which the UI already handles by prompting
+    for an upload.
+    """
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        duckdb.connect(str(path)).close()
+    return path
+
+
 # Read-only at the engine level: a stronger guarantee than pattern-matching the
 # SQL, and it lets the agent skip a hand-rolled statement guard entirely. Writes
 # happen only in register_dataset, through a separate short-lived connection.
-engine = create_engine(f"duckdb:///{DB_PATH}", connect_args={"read_only": True})
+engine = create_engine(f"duckdb:///{_ensure_database(DB_PATH)}", connect_args={"read_only": True})
 _active_path = DB_PATH
 
 
@@ -42,7 +57,7 @@ def _use_database(path: Path) -> None:
     with different settings to one file, so the old engine is disposed first."""
     global engine, _active_path
     engine.dispose()
-    engine = create_engine(f"duckdb:///{path}", connect_args={"read_only": True})
+    engine = create_engine(f"duckdb:///{_ensure_database(Path(path))}", connect_args={"read_only": True})
     _active_path = Path(path)
 
 

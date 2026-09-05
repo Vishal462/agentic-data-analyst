@@ -8,6 +8,9 @@ from a tool that actually executed, and the model's job is to choose the tools a
 
 ![Application overview](assets/app-overview.png)
 
+*The agent chose `compare_groups`; the footer reports elapsed time, model steps, the tools used, and a
+link to the run's LangSmith trace.*
+
 ## Features
 
 - **Agentic tool selection with LangGraph** — an explicit `agent ⇄ tools` loop; the model picks the tools,
@@ -59,13 +62,8 @@ Nine tools are available: `list_tables`, `describe_table`, `run_sql`, `compare_g
 
 ## Screenshots
 
-**Answering a question** — the agent chose `compare_groups`; the footer reports the elapsed time, the
-number of model steps, the tools used, and a link to the run's LangSmith trace.
-
-![Chat answer](assets/app-overview.png)
-
-**LangSmith trace** — the same run as an `agent → tools → agent` loop, with each `ChatOllama` call timed
-and the exact arguments the model passed to `compare_groups`.
+**LangSmith trace** — the run shown at the top of this README, as an `agent → tools → agent` loop: each
+`ChatOllama` call timed, and the exact arguments the model passed to `compare_groups`.
 
 ![LangSmith trace](assets/langgraph-trace.png)
 
@@ -130,7 +128,7 @@ Latest results:
 | `groups_reported` | 2 / 2 |
 | **Flight evaluation (all checks)** | **56 / 57** |
 | **Sales evaluation (all checks)** | **15 / 15** |
-| Unit tests | 17 passing (10 without a local dataset; the rest need the DuckDB fixture) |
+| Unit tests | 17 passing, 2 skipped (document-retrieval tests are opt-in) |
 
 The single failed flight check was a brittle assertion in the test data, not an agent error: the case
 expected the substring `"not"` while the agent correctly replied *"There is **no** ticket price column in
@@ -232,8 +230,11 @@ each indexed document can be expanded to read exactly the chunks the retriever c
 
 ## Limitations
 
-- **Latency depends on hardware.** The model runs locally through Ollama; a question typically takes
-  from tens of seconds to a few minutes on consumer hardware.
+- **A reachable Ollama endpoint is required.** The app talks to Ollama, so it needs one running locally
+  (or a remote endpoint configured). It starts without one — showing an empty dataset prompt — but cannot
+  answer questions.
+- **Latency depends on hardware.** A question typically takes from tens of seconds to a few minutes on
+  consumer hardware.
 - **Semantic interpretation is bounded by the model.** Mapping ambiguous wording onto the right column is
   the model's job; a stronger model interprets questions more reliably. Guarantees that matter for
   correctness are enforced in code, not left to the prompt.
