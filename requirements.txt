@@ -24,3 +24,4 @@ streamlit
 openpyxl
 xlrd
 pyarrow
+torchvision
