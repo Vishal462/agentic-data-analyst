@@ -211,23 +211,29 @@ result, and `--session <name>` selects the document collection to search.
 
 ## Datasets
 
-Upload is the primary path: any CSV, TSV, Excel or Parquet file dropped into the **Data** tab is loaded
-into DuckDB, becomes the active dataset, and is immediately queryable — no code changes and no manual
-database setup. A safe table name is derived from the filename, the file is loaded into a staging table
-first so a malformed upload cannot destroy the dataset currently in use, and each upload replaces the
-previous one so the schema stays unambiguous.
+**There is no bundled runtime dataset — you upload your own.** The app starts with an empty database and
+the Data tab prompts for a file; analysis begins once you have uploaded one.
 
-`tests/fixtures/sales.csv` is included as a small ready-to-use example. Larger datasets — including the
-flights database used during development — are generated locally and are **not** committed to this
-repository; point `DATA_ANALYST_DB_PATH` at a local DuckDB file to use one.
+Any **CSV, TSV, Excel (`.xlsx`/`.xls`) or Parquet** file dropped into the **Data** tab is loaded into
+DuckDB, becomes the active dataset, and is immediately queryable — no code changes and no manual database
+setup. A safe table name is derived from the filename, the file is loaded into a staging table first so a
+malformed upload cannot destroy the dataset currently in use, and each upload replaces the previous one so
+the schema stays unambiguous.
+
+**Test fixtures are not runtime data.** `tests/fixtures/sales.csv` (1,200 rows) exists only for the unit
+tests and the evaluation suite. It is small enough to commit, and you are welcome to upload it as a sample,
+but it is not loaded automatically and is not the application's data. No large dataset — including the
+flight data used during development — is committed to this repository. To work from an existing DuckDB
+file instead of uploading, point `DATA_ANALYST_DB_PATH` at it.
 
 The **Data** tab also browses the active table with server-side pagination, filtering and sorting, so
 large tables never load into the browser.
 
 ## Documents (RAG)
 
-Documents are uploaded per named **session** in the **Documents** tab. Each file is chunked, embedded with
-a local `sentence-transformers` model and stored in a persistent ChromaDB collection, so an index survives
+**PDF, DOCX, Markdown and TXT** documents are uploaded per named **session** in the **Documents** tab —
+separate from the tabular dataset above. Each file is chunked, embedded with a local
+`sentence-transformers` model and stored in a persistent ChromaDB collection, so an index survives
 restarts. Re-uploading the same content is skipped via content hashing.
 
 Retrieval returns the passages *and* their source filenames, and the final answer credits those filenames.
@@ -258,13 +264,13 @@ agentic-data-analyst/
 │   ├── db.py                    DuckDB access, dataset registration, schema discovery
 │   ├── llm.py                   single place the chat model is configured
 │   ├── python_analysis.py       ANOVA and descriptive statistics
-│   ├── visualization.py         Matplotlib chart rendering
 │   ├── rag/
 │   │   ├── ingestion.py         chunking, deduplication, indexing
 │   │   ├── retriever.py         source-aware retrieval
 │   │   ├── vector_store.py      ChromaDB sessions and inspection
 │   │   └── cli.py               command-line document indexing
 │   ├── analyst.py               earlier deterministic pipeline, kept as a baseline
+│   ├── visualization.py         baseline: plan-driven chart rendering
 │   ├── analyst_state.py         state schema for the baseline pipeline
 │   ├── planner.py               baseline: schema-driven analysis planning
 │   ├── semantic_validation.py   baseline: checks generated SQL matches the plan
@@ -276,7 +282,7 @@ agentic-data-analyst/
 │   ├── test_llm_output_and_matching.py  model-output cleaning, column matching
 │   ├── test_semantic_validation.py      plan/SQL agreement checks
 │   ├── test_rag_integration.py  document ingestion and retrieval (opt-in)
-│   └── fixtures/sales.csv       small non-flight dataset
+│   └── fixtures/sales.csv       test fixture, not runtime application data
 ├── assets/                      screenshots used in this README
 ├── streamlit_app.py             Streamlit UI: Analyze · Data · Documents · Runs
 ├── ask.py                       command-line runner
@@ -284,6 +290,6 @@ agentic-data-analyst/
 └── .env.example
 ```
 
-`analyst.py`, `analyst_state.py`, `planner.py`, `semantic_validation.py` and `lanchain_sql_agent.py` are
-the earlier deterministic plan-and-route implementation. They are retained as a baseline for comparison
+`analyst.py`, `analyst_state.py`, `planner.py`, `semantic_validation.py`, `lanchain_sql_agent.py` and
+`visualization.py` are the earlier deterministic plan-and-route implementation. They are retained as a baseline for comparison
 and are **not** wired into the running application — the agent loop is the only path the app uses.

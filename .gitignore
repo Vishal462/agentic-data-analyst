@@ -1,5 +1,6 @@
 # Secrets
 .env
+.streamlit/secrets.toml
 
 # Python
 __pycache__/
@@ -10,9 +11,14 @@ venv/
 
 # IDE
 .idea/
+.vscode/
 
-# Generated data and artifacts
-data/*.duckdb
-data/chroma/
+# Logs
+*.log
+logs/
+
+# Runtime data: databases, vector store, generated charts, and any dataset a user
+# drops into data/. Test fixtures under tests/ are intentionally NOT ignored.
+*.duckdb
+data/
 artifacts/
-data/*.csv
