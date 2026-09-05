@@ -1,0 +1,190 @@
+{
+  "dataset": "agentic-data-analyst-eval",
+  "description": "Deterministic regression cases for the agent. Reference values were computed directly against data/analytics_test.duckdb (50,000 flight rows) and the flights-demo document session.",
+  "session_id": "flights-demo",
+  "cases": [
+    {
+      "id": "sql-count",
+      "category": "basic sql",
+      "question": "How many flights are in the dataset?",
+      "expected_tool": "run_sql",
+      "expected_numbers": [50000]
+    },
+    {
+      "id": "sql-distinct-count",
+      "category": "basic sql",
+      "question": "How many distinct airlines are in the dataset?",
+      "expected_tool": "run_sql",
+      "expected_numbers": [18]
+    },
+    {
+      "id": "sql-filtered-count",
+      "category": "basic sql",
+      "question": "How many flights departed from an origin airport with the code HNL?",
+      "expected_tool": "run_sql",
+      "expected_numbers": [355]
+    },
+    {
+      "id": "semantic-top-1",
+      "category": "semantic sql",
+      "question": "Which AIRLINE has the highest average DEP_DELAY?",
+      "expected_tool": "compare_groups",
+      "expected_group_by": "AIRLINE",
+      "expected_metric": "DEP_DELAY",
+      "expected_numbers": [18.9038],
+      "expected_text": ["JetBlue"]
+    },
+    {
+      "id": "semantic-natural-language",
+      "category": "semantic sql",
+      "question": "Which airlines have the worst average departure delays?",
+      "expected_tool": "compare_groups",
+      "expected_group_by": "AIRLINE",
+      "expected_metric": "DEP_DELAY",
+      "expected_text": ["JetBlue"]
+    },
+    {
+      "id": "stats-anova-top10",
+      "category": "sql + python",
+      "question": "Which 10 airlines have the highest average departure delay, and is the difference statistically significant?",
+      "expected_tool": "compare_groups",
+      "expected_group_by": "AIRLINE",
+      "expected_metric": "DEP_DELAY",
+      "expected_group_count": 10,
+      "expected_p_value": 4.4669552e-47,
+      "expected_significant": true
+    },
+    {
+      "id": "stats-anova-plain",
+      "category": "python/statistical",
+      "question": "Is the difference in departure delay between airlines statistically significant?",
+      "expected_tool": "compare_groups",
+      "expected_metric": "DEP_DELAY",
+      "expected_p_value": 4.4669552e-47,
+      "expected_significant": true
+    },
+    {
+      "id": "stats-anova-by-origin",
+      "category": "python/statistical",
+      "question": "Do departure delays differ significantly between origin airports?",
+      "expected_tool": "compare_groups",
+      "expected_group_by": "ORIGIN",
+      "expected_metric": "DEP_DELAY"
+    },
+    {
+      "id": "stats-distribution",
+      "category": "python/statistical",
+      "question": "What is the distribution of departure delay? Give me the summary statistics.",
+      "expected_tool": "describe_distribution",
+      "expected_metric": "DEP_DELAY"
+    },
+    {
+      "id": "stats-correlation",
+      "category": "python/statistical",
+      "question": "What is the correlation between departure delay and arrival delay?",
+      "expected_tool": "correlate"
+    },
+    {
+      "id": "display-all-groups",
+      "category": "semantic sql",
+      "question": "Show average departure delay by airline.",
+      "expected_tool": "compare_groups",
+      "expected_group_by": "AIRLINE",
+      "expected_metric": "DEP_DELAY",
+      "expected_group_count": 18,
+      "notes": "No explicit N was requested, so the documented default is every group."
+    },
+    {
+      "id": "viz-bar-chart",
+      "category": "visualization",
+      "question": "Show me a bar chart of average departure delay by airline.",
+      "expected_tool": "make_chart",
+      "expects_chart": true
+    },
+    {
+      "id": "rag-definition",
+      "category": "rag",
+      "question": "What does departure delay mean according to the uploaded documentation?",
+      "expected_tool": "search_documents",
+      "expected_source": "flights_data_dictionary.md",
+      "expected_text": ["scheduled", "actual"]
+    },
+    {
+      "id": "rag-plus-sql",
+      "category": "sql + rag",
+      "question": "Which airlines have the highest average departure delay, and what does departure delay mean according to the uploaded documentation?",
+      "expected_tools_any": ["compare_groups", "run_sql"],
+      "expected_tool": "search_documents",
+      "expected_source": "flights_data_dictionary.md",
+      "expected_text": ["JetBlue"]
+    },
+    {
+      "id": "regression-wrong-column",
+      "category": "regression",
+      "question": "What is the average value of the DEPARTURE_DELAY_MINUTES column by airline?",
+      "expected_text": ["DEP_DELAY"],
+      "notes": "No such column. Previously the agent guessed lowercase names, the tool errored, and it answered with placeholders like 'Airline A ... X minutes'. It must recover onto the real column or say the column does not exist - never fabricate."
+    },
+    {
+      "id": "regression-no-sampling",
+      "category": "regression",
+      "question": "Take a sample of 1000 flights and tell me whether departure delay differs significantly between airlines.",
+      "expected_tool": "compare_groups",
+      "expected_p_value": 4.4669552e-47,
+      "notes": "A LIMITed sample flipped this to 'not significant' (p=0.66). The tool must refuse a sampled statistical test."
+    },
+    {
+      "id": "unanswerable-missing-column",
+      "category": "unanswerable",
+      "question": "What was the average ticket price per airline?",
+      "must_not_contain_numbers": true,
+      "expected_text": ["not", "price"],
+      "notes": "There is no price column. The agent must say so rather than substitute another metric."
+    },
+    {
+      "id": "unanswerable-missing-table",
+      "category": "unanswerable",
+      "question": "How many hotel bookings were made last quarter?",
+      "must_not_contain_numbers": true,
+      "notes": "No such table exists in this database."
+    }
+  ],
+  "sales_cases": [
+    {
+      "id": "sales-top-categories",
+      "category": "non-flight dataset",
+      "question": "Which product categories have the highest average revenue?",
+      "expected_tool": "compare_groups",
+      "expected_group_by": "category",
+      "expected_metric": "revenue",
+      "expected_text": ["Electronics"]
+    },
+    {
+      "id": "sales-significance",
+      "category": "non-flight dataset",
+      "question": "Do the product categories differ significantly in average revenue?",
+      "expected_tool": "compare_groups",
+      "expected_metric": "revenue",
+      "expected_significant": true
+    },
+    {
+      "id": "sales-total-by-region",
+      "category": "regression",
+      "question": "What are the total sales by region?",
+      "expected_tool": "compare_groups",
+      "expected_group_by": "region",
+      "expected_metric": "revenue",
+      "expected_group_count": 4,
+      "expected_text": ["North", "South", "East", "West"],
+      "notes": "Regression: the agent grouped by SEGMENT and reported Retail/Wholesale totals. 'Region' must map to the region column, 'total' to a sum, and 'sales' to the revenue column. Truth: East 134535.05, North 133103.84, South 133263.31, West 132539.15."
+    },
+    {
+      "id": "sales-missing-grouping",
+      "category": "regression",
+      "question": "What are the total sales by country?",
+      "must_not_contain_numbers": true,
+      "expected_text": ["country"],
+      "notes": "Regression: there is no country column. The agent must say so rather than silently substituting a nearby categorical column, which is how the region bug produced a confident answer to a different question."
+    }
+  ]
+}

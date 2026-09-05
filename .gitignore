@@ -1,0 +1,18 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# IDE
+.idea/
+
+# Generated data and artifacts
+data/*.duckdb
+data/chroma/
+artifacts/
+data/*.csv
