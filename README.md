@@ -59,13 +59,30 @@ Nine tools are available: `list_tables`, `describe_table`, `run_sql`, `compare_g
 
 ## Screenshots
 
-| | |
-|---|---|
-| ![Overview](assets/app-overview.png) | **Chat interface** — step-by-step progress streams live while the agent works. |
-| ![Trace](assets/langgraph-trace.png) | **LangSmith trace** — every model call, tool call and timing for a single run. |
-| ![Visualization](assets/visualization.png) | **Generated chart** — rendered by Matplotlib from real query results. |
-| ![Dataset upload](assets/dataset-upload.png) | **Dataset upload** — a file is registered into DuckDB and becomes the active dataset. |
-| ![RAG](assets/rag.png) | **Document retrieval** — an answer grounded in uploaded documents, with its source cited. |
+**Answering a question** — the agent chose `compare_groups`; the footer reports the elapsed time, the
+number of model steps, the tools used, and a link to the run's LangSmith trace.
+
+![Chat answer](assets/app-overview.png)
+
+**LangSmith trace** — the same run as an `agent → tools → agent` loop, with each `ChatOllama` call timed
+and the exact arguments the model passed to `compare_groups`.
+
+![LangSmith trace](assets/langgraph-trace.png)
+
+**Visualization** — a follow-up request; the agent queried the data and called `make_chart`, and the
+Matplotlib line chart is rendered inline.
+
+![Monthly average arrival delay chart](assets/visualization.png)
+
+**Dataset upload** — after uploading `sales.csv`, the sidebar switches to `uploads.duckdb (uploaded)` with
+table `sales`, and the Data tab pages through the new dataset.
+
+![Dataset upload](assets/dataset-upload.png)
+
+**Indexed documents** — the Documents tab lists each indexed file and expands to show the exact chunks the
+retriever can see, which is what `search_documents` searches and cites.
+
+![Indexed documents](assets/rag.png)
 
 ## Tech stack
 
@@ -113,7 +130,7 @@ Latest results:
 | `groups_reported` | 2 / 2 |
 | **Flight evaluation (all checks)** | **56 / 57** |
 | **Sales evaluation (all checks)** | **15 / 15** |
-| Unit tests | 17 passing |
+| Unit tests | 17 passing (10 without a local dataset; the rest need the DuckDB fixture) |
 
 The single failed flight check was a brittle assertion in the test data, not an agent error: the case
 expected the substring `"not"` while the agent correctly replied *"There is **no** ticket price column in
@@ -123,6 +140,7 @@ depends on the model, and the known limitations below are real.
 Run it:
 
 ```bash
+pytest tests --ignore=tests/langsmith_eval.py   # unit tests
 python tests/langsmith_eval.py --smoke      # 3 cases, verifies the harness
 python tests/langsmith_eval.py              # full flight suite, results to LangSmith
 python tests/langsmith_eval.py --sales      # non-flight dataset cases
@@ -247,6 +265,10 @@ agentic-data-analyst/
 ├── tests/
 │   ├── langsmith_eval.py        deterministic evaluation runner and evaluators
 │   ├── eval_cases.json          evaluation cases and reference values
+│   ├── test_generic_core.py     planning and statistics on arbitrary schemas
+│   ├── test_llm_output_and_matching.py  model-output cleaning, column matching
+│   ├── test_semantic_validation.py      plan/SQL agreement checks
+│   ├── test_rag_integration.py  document ingestion and retrieval (opt-in)
 │   └── fixtures/sales.csv       small non-flight dataset
 ├── assets/                      screenshots used in this README
 ├── streamlit_app.py             Streamlit UI: Analyze · Data · Documents · Runs
